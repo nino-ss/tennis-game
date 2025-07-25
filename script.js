@@ -4,6 +4,10 @@ class TennisGame {
         this.ctx = this.canvas.getContext('2d');
         this.gameRunning = false;
         
+        // 効果音用のAudioContext
+        this.audioContext = null;
+        this.initAudio();
+        
         // ゲーム要素
         this.ball = {
             x: this.canvas.width / 2,
@@ -41,6 +45,79 @@ class TennisGame {
         this.draw();
     }
     
+    initAudio() {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn('Web Audio API not supported');
+        }
+    }
+    
+    // パドルヒット音を生成
+    playPaddleHitSound() {
+        if (!this.audioContext) return;
+        
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(400, this.audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(200, this.audioContext.currentTime + 0.1);
+        
+        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + 0.1);
+    }
+    
+    // 得点音を生成
+    playScoreSound() {
+        if (!this.audioContext) return;
+        
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(523, this.audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(659, this.audioContext.currentTime + 0.1);
+        oscillator.frequency.setValueAtTime(784, this.audioContext.currentTime + 0.2);
+        
+        gainNode.gain.setValueAtTime(0.4, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.3);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + 0.3);
+    }
+    
+    // 勝利音を生成
+    playWinSound() {
+        if (!this.audioContext) return;
+        
+        const frequencies = [523, 659, 784, 1047];
+        frequencies.forEach((freq, index) => {
+            const oscillator = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(this.audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+            
+            const startTime = this.audioContext.currentTime + index * 0.15;
+            gainNode.gain.setValueAtTime(0, startTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+            
+            oscillator.start(startTime);
+            oscillator.stop(startTime + 0.4);
+        });
+    }
+    
     initEventListeners() {
         // キーボードイベント
         document.addEventListener('keydown', (e) => {
@@ -68,6 +145,10 @@ class TennisGame {
     
     startGame() {
         if (!this.gameRunning) {
+            // AudioContextをユーザーインタラクション後に有効化
+            if (this.audioContext && this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+            }
             this.gameRunning = true;
             this.gameLoop();
         }
@@ -135,9 +216,11 @@ class TennisGame {
         // スコア判定
         if (this.ball.x < 0) {
             this.score.player2++;
+            this.playScoreSound();
             this.resetBall();
         } else if (this.ball.x > this.canvas.width) {
             this.score.player1++;
+            this.playScoreSound();
             this.resetBall();
         }
         
@@ -154,26 +237,30 @@ class TennisGame {
         if (this.ball.x - this.ball.radius <= this.player1.x + this.player1.width &&
             this.ball.x + this.ball.radius >= this.player1.x &&
             this.ball.y >= this.player1.y &&
-            this.ball.y <= this.player1.y + this.player1.height) {
+            this.ball.y <= this.player1.y + this.player1.height &&
+            this.ball.dx < 0) {
             
             this.ball.dx = Math.abs(this.ball.dx);
             // パドルの位置に応じてボールの角度を変更
             let paddleCenter = this.player1.y + this.player1.height / 2;
             let hitPos = (this.ball.y - paddleCenter) / (this.player1.height / 2);
             this.ball.dy = hitPos * 5;
+            this.playPaddleHitSound();
         }
         
         // プレイヤー2のパドルとの衝突
         if (this.ball.x + this.ball.radius >= this.player2.x &&
             this.ball.x - this.ball.radius <= this.player2.x + this.player2.width &&
             this.ball.y >= this.player2.y &&
-            this.ball.y <= this.player2.y + this.player2.height) {
+            this.ball.y <= this.player2.y + this.player2.height &&
+            this.ball.dx > 0) {
             
             this.ball.dx = -Math.abs(this.ball.dx);
             // パドルの位置に応じてボールの角度を変更
             let paddleCenter = this.player2.y + this.player2.height / 2;
             let hitPos = (this.ball.y - paddleCenter) / (this.player2.height / 2);
             this.ball.dy = hitPos * 5;
+            this.playPaddleHitSound();
         }
     }
     
@@ -193,6 +280,7 @@ class TennisGame {
         this.gameRunning = false;
         let winner = this.score.player1 >= 5 ? 'プレイヤー1の勝利！' : 'プレイヤー2の勝利！';
         document.getElementById('winner').textContent = winner;
+        this.playWinSound();
         this.showGameOver();
     }
     
