@@ -4,6 +4,11 @@ class TennisGame {
         this.ctx = this.canvas.getContext('2d');
         this.gameRunning = false;
         
+        // ゲームモード管理
+        this.gameMode = 'multiplayer'; // 'singleplayer' or 'multiplayer'
+        this.difficulty = 'normal'; // 'easy', 'normal', 'hard'
+        this.currentScreen = 'modeSelection'; // 'modeSelection', 'game'
+        
         // 効果音用のAudioContext
         this.audioContext = null;
         this.initAudio();
@@ -42,7 +47,47 @@ class TennisGame {
         
         this.keys = {};
         this.initEventListeners();
+        this.initUI();
         this.draw();
+    }
+    
+    initUI() {
+        // 初期画面をモード選択に設定
+        this.showModeSelection();
+    }
+    
+    showModeSelection() {
+        document.getElementById('modeSelection').classList.remove('hidden');
+        document.getElementById('gameScreen').classList.add('hidden');
+        this.currentScreen = 'modeSelection';
+    }
+    
+    showGameScreen() {
+        document.getElementById('modeSelection').classList.add('hidden');
+        document.getElementById('difficultySelection').classList.add('hidden');
+        document.getElementById('gameScreen').classList.remove('hidden');
+        this.currentScreen = 'game';
+        this.updateModeDisplay();
+    }
+    
+    showDifficultySelection() {
+        document.getElementById('modeSelection').querySelector('.mode-buttons').style.display = 'none';
+        document.getElementById('difficultySelection').classList.remove('hidden');
+    }
+    
+    hideDifficultySelection() {
+        document.getElementById('modeSelection').querySelector('.mode-buttons').style.display = 'flex';
+        document.getElementById('difficultySelection').classList.add('hidden');
+    }
+    
+    updateModeDisplay() {
+        const modeText = this.gameMode === 'singleplayer' ? '一人プレイ (vs CPU)' : '二人プレイ';
+        document.getElementById('currentModeText').textContent = modeText;
+        
+        const controlsText = this.gameMode === 'singleplayer' 
+            ? 'プレイヤー: W/S キー　CPU: 自動操作'
+            : 'プレイヤー1: W/S キー　プレイヤー2: ↑/↓ キー';
+        document.getElementById('controlsText').textContent = controlsText;
     }
     
     initAudio() {
@@ -128,7 +173,34 @@ class TennisGame {
             this.keys[e.key] = false;
         });
         
-        // ボタンイベント
+        // モード選択イベント
+        document.getElementById('singlePlayerBtn').addEventListener('click', () => {
+            this.showDifficultySelection();
+        });
+        
+        document.getElementById('multiPlayerBtn').addEventListener('click', () => {
+            this.gameMode = 'multiplayer';
+            this.showGameScreen();
+        });
+        
+        // 難易度選択イベント
+        document.getElementById('easyBtn').addEventListener('click', () => {
+            this.selectDifficulty('easy');
+        });
+        
+        document.getElementById('normalBtn').addEventListener('click', () => {
+            this.selectDifficulty('normal');
+        });
+        
+        document.getElementById('hardBtn').addEventListener('click', () => {
+            this.selectDifficulty('hard');
+        });
+        
+        document.getElementById('backToModeBtn').addEventListener('click', () => {
+            this.hideDifficultySelection();
+        });
+        
+        // ゲーム画面イベント
         document.getElementById('startButton').addEventListener('click', () => {
             this.startGame();
         });
@@ -141,6 +213,98 @@ class TennisGame {
             this.resetGame();
             this.startGame();
         });
+        
+        document.getElementById('backToMenuBtn').addEventListener('click', () => {
+            this.resetGame();
+            this.showModeSelection();
+        });
+        
+        document.getElementById('changeModeBtn').addEventListener('click', () => {
+            this.resetGame();
+            this.showModeSelection();
+        });
+    }
+    
+    selectDifficulty(difficulty) {
+        this.difficulty = difficulty;
+        this.gameMode = 'singleplayer';
+        
+        // 難易度ボタンの選択状態を更新
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        document.getElementById(difficulty + 'Btn').classList.add('selected');
+        
+        // 少し遅延してからゲーム画面に移行
+        setTimeout(() => {
+            this.showGameScreen();
+        }, 500);
+    }
+    
+    updateCPUPlayer() {
+        // CPU AIの動作パラメータ（難易度に応じて調整）
+        let cpuSpeed, reactionDelay, accuracy;
+        
+        switch (this.difficulty) {
+            case 'easy':
+                cpuSpeed = 4;
+                reactionDelay = 0.8;
+                accuracy = 0.7;
+                break;
+            case 'normal':
+                cpuSpeed = 6;
+                reactionDelay = 0.6;
+                accuracy = 0.85;
+                break;
+            case 'hard':
+                cpuSpeed = 8;
+                reactionDelay = 0.4;
+                accuracy = 0.95;
+                break;
+        }
+        
+        
+        // ボールとの距離を考慮した予測位置
+        const ballDistanceToPlayer2 = this.canvas.width - this.ball.x;
+        const timeToReachPlayer2 = ballDistanceToPlayer2 / Math.abs(this.ball.dx);
+        
+        // ボールの予測位置（簡単な線形予測）
+        let predictedBallY = this.ball.y;
+        if (this.ball.dx > 0) { // ボールがCPUの方向に向かっている場合
+            predictedBallY = this.ball.y + (this.ball.dy * timeToReachPlayer2 * reactionDelay);
+        }
+        
+        // 精度を適用（完璧でない動きをシミュレート）
+        const randomOffset = (Math.random() - 0.5) * (1 - accuracy) * 100;
+        predictedBallY += randomOffset;
+        
+        // CPUの動作決定
+        const targetY = predictedBallY - this.player2.height / 2;
+        const currentY = this.player2.y;
+        const diff = targetY - currentY;
+        
+        // デッドゾーン（小さな差は無視）
+        const deadZone = 20;
+        
+        if (Math.abs(diff) > deadZone) {
+            if (diff > 0) {
+                this.player2.dy = cpuSpeed;
+            } else {
+                this.player2.dy = -cpuSpeed;
+            }
+        } else {
+            this.player2.dy = 0;
+        }
+        
+        // ボールがCPUから離れている時は中央に戻る傾向
+        if (this.ball.dx < 0) {
+            const centerY = this.canvas.height / 2 - this.player2.height / 2;
+            const centerDiff = centerY - currentY;
+            
+            if (Math.abs(centerDiff) > 50) {
+                this.player2.dy = centerDiff > 0 ? cpuSpeed * 0.3 : -cpuSpeed * 0.3;
+            }
+        }
     }
     
     startGame() {
@@ -184,13 +348,18 @@ class TennisGame {
             this.player1.dy = 0;
         }
         
-        // プレイヤー2の移動 (矢印キー)
-        if (this.keys['ArrowUp']) {
-            this.player2.dy = -this.player2.speed;
-        } else if (this.keys['ArrowDown']) {
-            this.player2.dy = this.player2.speed;
+        // プレイヤー2の移動 (二人プレイ時は矢印キー、一人プレイ時はCPU)
+        if (this.gameMode === 'multiplayer') {
+            if (this.keys['ArrowUp']) {
+                this.player2.dy = -this.player2.speed;
+            } else if (this.keys['ArrowDown']) {
+                this.player2.dy = this.player2.speed;
+            } else {
+                this.player2.dy = 0;
+            }
         } else {
-            this.player2.dy = 0;
+            // CPU AIの動作
+            this.updateCPUPlayer();
         }
         
         // パドルの位置更新
@@ -278,7 +447,14 @@ class TennisGame {
     
     endGame() {
         this.gameRunning = false;
-        let winner = this.score.player1 >= 5 ? 'プレイヤー1の勝利！' : 'プレイヤー2の勝利！';
+        let winner;
+        
+        if (this.gameMode === 'singleplayer') {
+            winner = this.score.player1 >= 5 ? 'プレイヤーの勝利！' : 'CPUの勝利！';
+        } else {
+            winner = this.score.player1 >= 5 ? 'プレイヤー1の勝利！' : 'プレイヤー2の勝利！';
+        }
+        
         document.getElementById('winner').textContent = winner;
         this.playWinSound();
         this.showGameOver();

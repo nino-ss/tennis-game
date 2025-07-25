@@ -8,21 +8,58 @@
 </head>
 <body>
     <div class="game-container">
-        <div class="score-board">
-            <div class="player1-score">0</div>
-            <div class="vs">VS</div>
-            <div class="player2-score">0</div>
+        <!-- モード選択画面 -->
+        <div id="modeSelection" class="mode-selection">
+            <h1>テニスゲーム</h1>
+            <div class="mode-buttons">
+                <button id="singlePlayerBtn" class="mode-btn">
+                    <div class="mode-title">一人プレイ</div>
+                    <div class="mode-desc">vs CPU</div>
+                </button>
+                <button id="multiPlayerBtn" class="mode-btn">
+                    <div class="mode-title">二人プレイ</div>
+                    <div class="mode-desc">vs Player</div>
+                </button>
+            </div>
+            <div id="difficultySelection" class="difficulty-selection hidden">
+                <h3>難易度を選択</h3>
+                <div class="difficulty-buttons">
+                    <button id="easyBtn" class="difficulty-btn">簡単</button>
+                    <button id="normalBtn" class="difficulty-btn">普通</button>
+                    <button id="hardBtn" class="difficulty-btn">難しい</button>
+                </div>
+                <button id="backToModeBtn" class="back-btn">戻る</button>
+            </div>
         </div>
-        <canvas id="gameCanvas" width="800" height="400"></canvas>
-        <div class="controls">
-            <p>プレイヤー1: W/S キー</p>
-            <p>プレイヤー2: ↑/↓ キー</p>
-            <button id="startButton">ゲーム開始</button>
-            <button id="resetButton">リセット</button>
-        </div>
-        <div id="gameOver" class="game-over hidden">
-            <h2 id="winner"></h2>
-            <button id="playAgainButton">もう一度プレイ</button>
+
+        <!-- ゲーム画面 -->
+        <div id="gameScreen" class="game-screen hidden">
+            <div class="game-header">
+                <div class="current-mode">
+                    <span id="currentModeText">二人プレイ</span>
+                    <button id="changeModeBtn" class="change-mode-btn">モード変更</button>
+                </div>
+            </div>
+            
+            <div class="score-board">
+                <div class="player1-score">0</div>
+                <div class="vs">VS</div>
+                <div class="player2-score">0</div>
+            </div>
+            
+            <canvas id="gameCanvas" width="800" height="400"></canvas>
+            
+            <div class="controls">
+                <p id="controlsText">プレイヤー1: W/S キー　プレイヤー2: ↑/↓ キー</p>
+                <button id="startButton">ゲーム開始</button>
+                <button id="resetButton">リセット</button>
+            </div>
+            
+            <div id="gameOver" class="game-over hidden">
+                <h2 id="winner"></h2>
+                <button id="playAgainButton">もう一度プレイ</button>
+                <button id="backToMenuBtn">メニューに戻る</button>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>
