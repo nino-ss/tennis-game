@@ -57,37 +57,80 @@ class TennisGame {
     }
     
     showModeSelection() {
-        document.getElementById('modeSelection').classList.remove('hidden');
-        document.getElementById('gameScreen').classList.add('hidden');
+        const modeSelection = document.getElementById('modeSelection');
+        const gameScreen = document.getElementById('gameScreen');
+        
+        if (modeSelection) {
+            modeSelection.classList.remove('hidden');
+        }
+        if (gameScreen) {
+            gameScreen.classList.add('hidden');
+        }
         this.currentScreen = 'modeSelection';
     }
     
     showGameScreen() {
-        document.getElementById('modeSelection').classList.add('hidden');
-        document.getElementById('difficultySelection').classList.add('hidden');
-        document.getElementById('gameScreen').classList.remove('hidden');
+        const modeSelection = document.getElementById('modeSelection');
+        const difficultySelection = document.getElementById('difficultySelection');
+        const gameScreen = document.getElementById('gameScreen');
+        
+        if (modeSelection) {
+            modeSelection.classList.add('hidden');
+        }
+        if (difficultySelection) {
+            difficultySelection.classList.add('hidden');
+        }
+        if (gameScreen) {
+            gameScreen.classList.remove('hidden');
+        }
         this.currentScreen = 'game';
         this.updateModeDisplay();
     }
     
     showDifficultySelection() {
-        document.getElementById('modeSelection').querySelector('.mode-buttons').style.display = 'none';
-        document.getElementById('difficultySelection').classList.remove('hidden');
+        const modeSelection = document.getElementById('modeSelection');
+        const difficultySelection = document.getElementById('difficultySelection');
+        
+        if (modeSelection) {
+            const modeButtons = modeSelection.querySelector('.mode-buttons');
+            if (modeButtons) {
+                modeButtons.style.display = 'none';
+            }
+        }
+        if (difficultySelection) {
+            difficultySelection.classList.remove('hidden');
+        }
     }
     
     hideDifficultySelection() {
-        document.getElementById('modeSelection').querySelector('.mode-buttons').style.display = 'flex';
-        document.getElementById('difficultySelection').classList.add('hidden');
+        const modeSelection = document.getElementById('modeSelection');
+        const difficultySelection = document.getElementById('difficultySelection');
+        
+        if (modeSelection) {
+            const modeButtons = modeSelection.querySelector('.mode-buttons');
+            if (modeButtons) {
+                modeButtons.style.display = 'flex';
+            }
+        }
+        if (difficultySelection) {
+            difficultySelection.classList.add('hidden');
+        }
     }
     
     updateModeDisplay() {
         const modeText = this.gameMode === 'singleplayer' ? '一人プレイ (vs CPU)' : '二人プレイ';
-        document.getElementById('currentModeText').textContent = modeText;
+        const currentModeText = document.getElementById('currentModeText');
+        if (currentModeText) {
+            currentModeText.textContent = modeText;
+        }
         
         const controlsText = this.gameMode === 'singleplayer' 
             ? 'プレイヤー: W/S キー　CPU: 自動操作'
             : 'プレイヤー1: W/S キー　プレイヤー2: ↑/↓ キー';
-        document.getElementById('controlsText').textContent = controlsText;
+        const controlsElement = document.getElementById('controlsText');
+        if (controlsElement) {
+            controlsElement.textContent = controlsText;
+        }
     }
     
     initAudio() {
@@ -174,55 +217,91 @@ class TennisGame {
         });
         
         // モード選択イベント
-        document.getElementById('singlePlayerBtn').addEventListener('click', () => {
-            this.showDifficultySelection();
-        });
+        const singlePlayerBtn = document.getElementById('singlePlayerBtn');
+        const multiPlayerBtn = document.getElementById('multiPlayerBtn');
         
-        document.getElementById('multiPlayerBtn').addEventListener('click', () => {
-            this.gameMode = 'multiplayer';
-            this.showGameScreen();
-        });
+        if (singlePlayerBtn) {
+            singlePlayerBtn.addEventListener('click', () => {
+                this.showDifficultySelection();
+            });
+        }
+        
+        if (multiPlayerBtn) {
+            multiPlayerBtn.addEventListener('click', () => {
+                this.gameMode = 'multiplayer';
+                this.showGameScreen();
+            });
+        }
         
         // 難易度選択イベント
-        document.getElementById('easyBtn').addEventListener('click', () => {
-            this.selectDifficulty('easy');
-        });
+        const easyBtn = document.getElementById('easyBtn');
+        const normalBtn = document.getElementById('normalBtn');
+        const hardBtn = document.getElementById('hardBtn');
+        const backToModeBtn = document.getElementById('backToModeBtn');
         
-        document.getElementById('normalBtn').addEventListener('click', () => {
-            this.selectDifficulty('normal');
-        });
+        if (easyBtn) {
+            easyBtn.addEventListener('click', () => {
+                this.selectDifficulty('easy');
+            });
+        }
         
-        document.getElementById('hardBtn').addEventListener('click', () => {
-            this.selectDifficulty('hard');
-        });
+        if (normalBtn) {
+            normalBtn.addEventListener('click', () => {
+                this.selectDifficulty('normal');
+            });
+        }
         
-        document.getElementById('backToModeBtn').addEventListener('click', () => {
-            this.hideDifficultySelection();
-        });
+        if (hardBtn) {
+            hardBtn.addEventListener('click', () => {
+                this.selectDifficulty('hard');
+            });
+        }
+        
+        if (backToModeBtn) {
+            backToModeBtn.addEventListener('click', () => {
+                this.hideDifficultySelection();
+            });
+        }
         
         // ゲーム画面イベント
-        document.getElementById('startButton').addEventListener('click', () => {
-            this.startGame();
-        });
+        const startButton = document.getElementById('startButton');
+        const resetButton = document.getElementById('resetButton');
+        const playAgainButton = document.getElementById('playAgainButton');
+        const backToMenuBtn = document.getElementById('backToMenuBtn');
+        const changeModeBtn = document.getElementById('changeModeBtn');
         
-        document.getElementById('resetButton').addEventListener('click', () => {
-            this.resetGame();
-        });
+        if (startButton) {
+            startButton.addEventListener('click', () => {
+                this.startGame();
+            });
+        }
         
-        document.getElementById('playAgainButton').addEventListener('click', () => {
-            this.resetGame();
-            this.startGame();
-        });
+        if (resetButton) {
+            resetButton.addEventListener('click', () => {
+                this.resetGame();
+            });
+        }
         
-        document.getElementById('backToMenuBtn').addEventListener('click', () => {
-            this.resetGame();
-            this.showModeSelection();
-        });
+        if (playAgainButton) {
+            playAgainButton.addEventListener('click', () => {
+                this.resetGame();
+                this.startGame();
+            });
+        }
         
-        document.getElementById('changeModeBtn').addEventListener('click', () => {
-            this.resetGame();
-            this.showModeSelection();
-        });
+        if (backToMenuBtn) {
+            backToMenuBtn.addEventListener('click', () => {
+                this.resetGame();
+                this.showModeSelection();
+            });
+        }
+        
+        if (changeModeBtn) {
+            changeModeBtn.addEventListener('click', () => {
+                this.resetGame();
+                this.showModeSelection();
+            });
+        }
     }
     
     selectDifficulty(difficulty) {
@@ -230,10 +309,15 @@ class TennisGame {
         this.gameMode = 'singleplayer';
         
         // 難易度ボタンの選択状態を更新
-        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+        const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+        difficultyBtns.forEach(btn => {
             btn.classList.remove('selected');
         });
-        document.getElementById(difficulty + 'Btn').classList.add('selected');
+        
+        const selectedBtn = document.getElementById(difficulty + 'Btn');
+        if (selectedBtn) {
+            selectedBtn.classList.add('selected');
+        }
         
         // 少し遅延してからゲーム画面に移行
         setTimeout(() => {
