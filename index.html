@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>テニスゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="score-board">
+            <div class="player1-score">0</div>
+            <div class="vs">VS</div>
+            <div class="player2-score">0</div>
+        </div>
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+        <div class="controls">
+            <p>プレイヤー1: W/S キー</p>
+            <p>プレイヤー2: ↑/↓ キー</p>
+            <button id="startButton">ゲーム開始</button>
+            <button id="resetButton">リセット</button>
+        </div>
+        <div id="gameOver" class="game-over hidden">
+            <h2 id="winner"></h2>
+            <button id="playAgainButton">もう一度プレイ</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
